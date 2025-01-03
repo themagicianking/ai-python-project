@@ -1,52 +1,60 @@
 import random
 
-class TwentyQuestionsGame:
-    def __init__(self, objects):
-        self.objects = objects
-        self.selected_object = random.choice(objects)
-        self.questions_asked = 0
-        self.max_questions = 20
+class Mastermind:
+    def __init__(self):
+        self.code = self.generate_code()
+        self.max_attempts = 10
+        self.attempts = 0
 
-    def ask_question(self, question):
-        self.questions_asked += 1
-        if self.questions_asked > self.max_questions:
-            return "You've exceeded the maximum number of questions."
+    def generate_code(self):
+        # Generate a random 4-digit code with digits from 1 to 6
+        return [random.randint(1, 6) for _ in range(4)]
 
-        response = input(question + " (yes/no): ").strip().lower()
-        if response not in ['yes', 'no']:
-            return "Please answer with 'yes' or 'no'."
-        return response
+    def get_feedback(self, guess):
+        black_pegs = 0
+        white_pegs = 0
+        code_copy = self.code[:]
+        guess_copy = guess[:]
 
-    def guess_object(self, guess):
-        self.questions_asked += 1
-        if self.questions_asked > self.max_questions:
-            return "You've exceeded the maximum number of questions."
+        # First pass: count black pegs
+        for i in range(4):
+            if guess_copy[i] == code_copy[i]:
+                black_pegs += 1
+                code_copy[i] = guess_copy[i] = None
 
-        if guess.lower() == self.selected_object.lower():
-            return "Congratulations! You guessed it!"
-        else:
-            return "Incorrect guess. Try asking more questions."
+        # Second pass: count white pegs
+        for i in range(4):
+            if guess_copy[i] is not None and guess_copy[i] in code_copy:
+                white_pegs += 1
+                code_copy[code_copy.index(guess_copy[i])] = None
+
+        return black_pegs, white_pegs
 
     def start(self):
-        print("Welcome to the 20 Questions Game!")
-        print(f"You have {self.max_questions} questions to guess the object I'm thinking of.")
-        
-        while self.questions_asked < self.max_questions:
-            question = input("Ask a yes/no question or make a guess: ").strip()
-            if question.lower().startswith("is it") or question.lower().startswith("does it"):
-                response = self.ask_question(question)
-            else:
-                response = self.guess_object(question)
-            print(response)
-            if response == "Congratulations! You guessed it!":
-                break
-        
-        if self.questions_asked >= self.max_questions:
-            print(f"Sorry, you've used all your questions. The object was: {self.selected_object}")
+        print("Welcome to Mastermind!")
+        print("Try to guess the 4-digit code. Each digit is between 1 and 6.")
+        print(f"You have {self.max_attempts} attempts to guess the code.")
 
-# List of objects to guess from
-objects = ["apple", "banana", "car", "dog", "elephant", "flower", "guitar", "house", "ice cream", "jacket"]
+        while self.attempts < self.max_attempts:
+            guess = input("Enter your guess (4 digits, each between 1 and 6): ")
+            guess = [int(digit) for digit in guess]
+
+            if len(guess) != 4 or not all(1 <= digit <= 6 for digit in guess):
+                print("Invalid guess. Please enter 4 digits, each between 1 and 6.")
+                continue
+
+            self.attempts += 1
+            black_pegs, white_pegs = self.get_feedback(guess)
+
+            print(f"Black pegs (correct digit and position): {black_pegs}")
+            print(f"White pegs (correct digit but wrong position): {white_pegs}")
+
+            if black_pegs == 4:
+                print(f"Congratulations! You guessed the code in {self.attempts} attempts!")
+                break
+        else:
+            print(f"Sorry, you've used all your attempts. The code was: {''.join(map(str, self.code))}")
 
 # Start the game
-game = TwentyQuestionsGame(objects)
+game = Mastermind()
 game.start()
